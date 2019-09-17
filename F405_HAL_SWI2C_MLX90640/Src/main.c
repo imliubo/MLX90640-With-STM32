@@ -48,21 +48,20 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define  Rate2HZ   0x02
-#define  Rate4HZ   0x03
-#define  Rate8HZ   0x04
-#define  Rate16HZ  0x05
-#define  Rate32HZ  0x06
+#define  FPS2HZ   0x02
+#define  FPS4HZ   0x03
+#define  FPS8HZ   0x04
+#define  FPS16HZ  0x05
+#define  FPS32HZ  0x06
 
-#define  MLX_I2C_ADDR 0x33
-#define	 RefreshRate Rate4HZ 
+#define  MLX90640_ADDR 0x33
+#define	 RefreshRate FPS4HZ 
 #define  TA_SHIFT 8 //Default shift for MLX90640 in open air
 
 static uint16_t eeMLX90640[832];  
-uint16_t frame[834];
-float Ta,tr;
-float emissivity=0.95;
 static float mlx90640To[768];
+uint16_t frame[834];
+float emissivity=0.95;
 int status;
 /* USER CODE END PV */
 
@@ -110,19 +109,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	MLX90640_I2CInit();
 	
-	MLX90640_SetRefreshRate(MLX_I2C_ADDR, RefreshRate);
-	MLX90640_SetChessMode(MLX_I2C_ADDR);
+	MLX90640_SetRefreshRate(MLX90640_ADDR, RefreshRate);
+	MLX90640_SetChessMode(MLX90640_ADDR);
 	paramsMLX90640 mlx90640;
-  status = MLX90640_DumpEE(MLX_I2C_ADDR, eeMLX90640);
+  status = MLX90640_DumpEE(MLX90640_ADDR, eeMLX90640);
   if (status != 0) printf("\r\nload system parameters error with code:%d\r\n",status);
   status = MLX90640_ExtractParameters(eeMLX90640, &mlx90640);
   if (status != 0) printf("\r\nParameter extraction failed with error code:%d\r\n",status);
-
-	for(uint8_t i=0;i<3;i++)//Lose the start frame
-	{
-			MLX90640_GetFrameData(MLX_I2C_ADDR, frame);
-			HAL_Delay(500);
-	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -132,7 +125,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-			int status = MLX90640_GetFrameData(MLX_I2C_ADDR, frame);
+			int status = MLX90640_GetFrameData(MLX90640_ADDR, frame);
 			if (status < 0)
 			{
 				//printf("GetFrame Error: %d\r\n",status);
