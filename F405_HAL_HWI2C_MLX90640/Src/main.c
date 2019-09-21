@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -27,7 +28,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "MLX90640_API.h"
-#include "MLX90640_I2C_Driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +55,7 @@
 #define  FPS32HZ  0x06
 
 #define  MLX90640_ADDR 0x33
-#define	 RefreshRate FPS4HZ 
+#define	 RefreshRate FPS16HZ 
 #define  TA_SHIFT 8 //Default shift for MLX90640 in open air
 
 static uint16_t eeMLX90640[832];  
@@ -105,10 +105,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_I2C1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	MLX90640_I2CInit();
-	
 	MLX90640_SetRefreshRate(MLX90640_ADDR, RefreshRate);
 	MLX90640_SetChessMode(MLX90640_ADDR);
 	paramsMLX90640 mlx90640;
@@ -125,26 +124,26 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-			int status = MLX90640_GetFrameData(MLX90640_ADDR, frame);
-			if (status < 0)
-			{
-				//printf("GetFrame Error: %d\r\n",status);
-			}
-			float vdd = MLX90640_GetVdd(frame, &mlx90640);
-			float Ta = MLX90640_GetTa(frame, &mlx90640);
+		int status = MLX90640_GetFrameData(MLX90640_ADDR, frame);
+		if (status < 0)
+		{
+			//printf("GetFrame Error: %d\r\n",status);
+		}
+		float vdd = MLX90640_GetVdd(frame, &mlx90640);
+		float Ta = MLX90640_GetTa(frame, &mlx90640);
 
-			float tr = Ta - TA_SHIFT; //Reflected temperature based on the sensor ambient temperature
-			//printf("vdd:  %f Tr: %f\r\n",vdd,tr);
-			MLX90640_CalculateTo(frame, &mlx90640, emissivity , tr, mlx90640To);
+		float tr = Ta - TA_SHIFT; //Reflected temperature based on the sensor ambient temperature
+		//printf("vdd:  %f Tr: %f\r\n",vdd,tr);
+		MLX90640_CalculateTo(frame, &mlx90640, emissivity , tr, mlx90640To);
 
-			printf("\r\n==========================IAMLIUBO MLX90640 WITH STM32 SWI2C EXAMPLE Github:github.com/imliubo==========================\r\n");
-			for(int i = 0; i < 768; i++){
-				if(i%32 == 0 && i != 0){
-					printf("\r\n");
-				}
-				printf("%2.2f ",mlx90640To[i]);
+		printf("\r\n==========================IAMLIUBO MLX90640 WITH STM32 SWI2C EXAMPLE Github:github.com/imliubo==========================\r\n");
+		for(int i = 0; i < 768; i++){
+			if(i%32 == 0 && i != 0){
+				printf("\r\n");
 			}
-			printf("\r\n==========================IAMLIUB0 MLX90640 WITH STM32 SWI2C EXAMPLE Github:github.com/imliubo==========================\r\n");
+			printf("%2.2f ",mlx90640To[i]);
+		}
+		printf("\r\n==========================IAMLIUB0 MLX90640 WITH STM32 SWI2C EXAMPLE Github:github.com/imliubo==========================\r\n");
   }
   /* USER CODE END 3 */
 }
@@ -164,11 +163,12 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
