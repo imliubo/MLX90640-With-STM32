@@ -21,7 +21,7 @@
 #endif
 #include "main.h"
 
-#define SCALEALPHA 0.000001
+#define SCALEALPHA 0.000001f
     
 typedef struct
     {
